@@ -10,13 +10,38 @@ HDC hdcBackBuffer, hdcSprite;
 int spriteX = 0, spriteY = 0;
 int width = 0, height = 0;
 int coeffSpeed = 16;
-bool up = false, down = false, right = false, left = false;
+bool up = false, down = false, right = false, left = false, space = false;
+int directionX = 1, directionY = 1;
 bool isPicture = false;
-void ResizeWnd(HWND hWnd);
+
 void SpriteMovement(HWND hWnd)
 {
-    InvalidateRect(hWnd, &rcSize, true);
-    spriteX += 10;
+    if (space)
+    {
+        InvalidateRect(hWnd, &rcSize, true);
+        spriteX += directionX * (SPEED * coeffSpeed);
+        spriteY += directionY * (SPEED * coeffSpeed);
+        if (spriteY < 0)
+        {
+            directionY = 1;
+            spriteY = 0;
+        }
+        if (spriteY > height - HEIGHT)
+        {
+            directionY = -1;
+            spriteY = height - HEIGHT;
+        }
+        if (spriteX < 0)
+        {
+            directionX = 1;
+            spriteX = 0;
+        }
+        if (spriteX > width - WIDTH)
+        {
+            directionX = -1;
+            spriteX = width - WIDTH;
+        }
+    }
 }
 
 void ResizeWnd(HWND hWnd)
@@ -69,11 +94,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         case WM_CREATE:
         {
-            SetTimer(hWnd, TIMER_ID, 100, NULL);
+            SetTimer(hWnd, TIMER_ID, 10, NULL);
             return 0;
         }
         case WM_MOUSEWHEEL:
         {
+            InvalidateRect(hWnd, &rcSize, true);
             int delta = GET_WHEEL_DELTA_WPARAM(wParam);
             if (delta > 0) delta = 1;
             else delta = -1;
@@ -121,6 +147,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         case WM_KEYDOWN:
         {
+            InvalidateRect(hWnd, &rcSize, true);
             switch (wParam)
             {
                 case 65:
@@ -145,6 +172,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case 67:
                     isPicture = !isPicture;
                     ResizeWnd(hWnd);
+                    break;
+                case VK_SPACE:
+                    space = !space;
                     break;
             }
 
@@ -257,7 +287,6 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
             }
         }
 
-        InvalidateRect(hWnd, NULL, FALSE);
     }
 
     return msg.wParam;
